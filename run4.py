@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import time
-from imutils.video import FPS, FileVideoStream
+from imutils.video import FPS, FileVideoStream, WebcamVideoStream
 from multiprocessing import Process, Queue
 import multi_tracker as MT
 
@@ -35,7 +35,10 @@ def main():
     backSub = cv2.createBackgroundSubtractorKNN(history=450, dist2Threshold=150.0, detectShadows=True)
 
     # cap = cv2.VideoCapture('fish4.mp4')
-    cap = FileVideoStream('fish4.mp4').start() #initialize file video reader
+    #cap = FileVideoStream('fish4.mp4').start() #initialize file video reader
+    cap = WebcamVideoStream(0)
+    cap.start()
+    
     time.sleep(1.0) # Block for 1 sec, to let "cap" buffer frames
     frame = cap.read() # Get current frame    
     vh, vw = frame.shape[:2] # Get current frame height and width, [0]: height, [1]: width
@@ -58,7 +61,7 @@ def main():
     tt.start()
 
     # While cap has more frame continue
-    while cap.more():            
+    while True:            
         frame = cv2.resize(frame, (vw, vh), cv2.INTER_AREA)
         blank_frame = frame.copy() # Create a copy of original image for filtering    
         trackers = multiTracker.update(frame)
