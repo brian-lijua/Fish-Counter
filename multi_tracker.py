@@ -16,7 +16,7 @@ class MultiTracker:
                 oq.put((success, bbox))
             else:
                 oq.put(None)
-
+                
     def update(self, frame):
         result = []
         for tracker in self.trackers:
@@ -29,6 +29,9 @@ class MultiTracker:
             if success:
                 result.append((id, bbox))
             else:
+                iq.close()
+                oq.close()
+                track.terminate()
                 self.trackers.pop(idx)
             
         return result
@@ -36,7 +39,7 @@ class MultiTracker:
     def add(self, id, frame, bbox):
         inputQueue = Queue()
         outputQueue = Queue()
-
+        
         t = Process(target=self.initTracker, args=(frame, bbox, inputQueue, outputQueue))
         t.daemon = True
         t.start()
