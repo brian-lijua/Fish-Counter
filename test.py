@@ -33,17 +33,19 @@ def main():
 
     mt = MultiTracker.MultiTracker()
 
-    cap = FileVideoStream('fish4.mp4').start()
+    cap = FileVideoStream('fish7.mp4').start()
     time.sleep(1.0)
 
     frame = cap.read()
     vh, vw = frame.shape[:2]
 
-    subtractor = cv2.createBackgroundSubtractorKNN(history=120, dist2Threshold=30, detectShadows=False)
+    subtractor = cv2.createBackgroundSubtractorKNN(history=50, dist2Threshold=120, detectShadows=False)
+    # subtractor = cv2.createBackgroundSubtractorMOG2(history=120, varThreshold=100, detectShadows=False)
 
     fps.start()
 
     while cap.more():
+        # frame = cv2.flip(frame, 1)
         small_frame = cv2.resize(frame, dsize=None, dst=None , fx=(50 / 100), fy=(50 / 100), interpolation=cv2.INTER_LANCZOS4)
         filtered_frame = small_frame.copy()
         trackers = mt.update(small_frame)
@@ -60,28 +62,36 @@ def main():
                 cv2.rectangle(filtered_frame, xy1, ((xy1[0] + xy2[0]), (xy1[1] + xy2[1])), (255, 255, 255), -1)
 
         grayFrame = cv2.cvtColor(filtered_frame, cv2.COLOR_BGR2GRAY)
+        # cv2.imshow('gray', grayFrame)
         grayFrame = cv2.GaussianBlur(grayFrame, (5, 5), 0)
 
         mask = subtractor.apply(grayFrame)
         mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, np.ones((5,5), np.uint8), iterations=2)
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((5,5), np.uint8), iterations=2)
         mask = cv2.bitwise_and(grayFrame, grayFrame, mask=mask)
-
-        _, threshold = cv2.threshold(mask, 30, 150, 0)
-        contours, hierarchy = cv2.findContours(threshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-        # frameWithContours = small_frame.copy()
+        # H = cv2.Sobel(mask, cv2.CV_8U, 0, 1)
+        # V = cv2.Sobel(mask, cv2.CV_8U, 1, 0)
+        # mask = H + V
+        cv2.imshow('mask', mask)
+        cv2.waitKey(30)
+        _, threshold = cv2.threshold(mask, 25, 150, 0)
+        contours, hierarchy = cv2.findContours(threshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)        
         for contour in contours:
             x, y, w, h = cv2.boundingRect(contour)       
-            if x + w >= int(vw / 4) and x + w <= int((vw / 4) + 3):
+            
+            if x >= int(vw / 4) and x <= int((vw / 4) + 3):
                 counter += 1
-                mt.add(counter, small_frame, (int(x), int(y), int(w), int(h)))            
+                mt.add(counter, small_frame, (int(x), int(y), int(w), int(h)))
+            else:
+                small_frame = cv2.rectangle(small_frame, (x, y), (x + w, y + h), (0,0,255), cv2.FILLED)
 
         small_frame = cv2.resize(small_frame, dsize=None, dst=None, fx=(2), fy=(2), interpolation=cv2.INTER_LANCZOS4)
 
         fps.stop()
         fps.update()
-        print(fps.fps())
+        # print(fps.fps())
+        cv2.imshow('t', small_frame)
+        cv2.waitKey(0)
 
         dq.put(small_frame)
         frame = cap.read()

@@ -13,7 +13,7 @@ from imutils.video import FPS, FileVideoStream
 backSub = cv2.createBackgroundSubtractorKNN(history=450, dist2Threshold=150.0, detectShadows=True)
 
 # cap = cv2.VideoCapture('fish4.mp4')
-cap = FileVideoStream('fish4.mp4').start() #initialize file video reader
+cap = FileVideoStream('fish5.mp4').start() #initialize file video reader
 time.sleep(1.0) # Block for 1 sec, to let "cap" buffer frames
 frame = cap.read() # Get current frame
 vh, vw = frame.shape[:2] # Get current frame height and width, [0]: height, [1]: width

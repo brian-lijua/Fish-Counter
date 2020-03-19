@@ -4,9 +4,13 @@ from multiprocessing import Process, Queue
 class MultiTracker:    
     trackers = []
     frame = None
+    threshold = None
+
+    def setThreshold(self, thres):        
+        self.threshold = thres
 
     def initTracker(self, frame, bbox, iq, oq):
-        tracker = cv2.TrackerKCF_create()
+        tracker = cv2.TrackerCSRT_create()
         tracker.init(frame, bbox)
 
         while True:
@@ -17,7 +21,7 @@ class MultiTracker:
             else:
                 oq.put(None)
                 
-    def update(self, frame):
+    def update(self, frame):        
         result = []
         for tracker in self.trackers:
             id, track, iq, oq = tracker
@@ -27,7 +31,14 @@ class MultiTracker:
             id, track, iq, oq = tracker
             success, bbox = oq.get()
             if success:
-                result.append((id, bbox))
+                c = (bbox[0] + bbox[2])                
+                if c <= self.threshold and bbox[2] > 30:
+                    result.append((id, bbox))
+                else:
+                    iq.close()
+                    oq.close()
+                    track.terminate()
+                    self.trackers.pop(idx)                    
             else:
                 iq.close()
                 oq.close()
