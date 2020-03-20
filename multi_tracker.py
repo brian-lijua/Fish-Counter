@@ -35,10 +35,10 @@ class MultiTracker:
                 if c <= self.threshold and bbox[2] > 30:
                     result.append((id, bbox))
                 else:
-                    iq.close()
-                    oq.close()
-                    track.terminate()
-                    self.trackers.pop(idx)                    
+                    # iq.close()
+                    # oq.close()
+                    # track.terminate()
+                    self.trackers.pop(idx)
             else:
                 iq.close()
                 oq.close()
